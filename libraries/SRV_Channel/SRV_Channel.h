@@ -158,6 +158,8 @@ public:
         k_ProfiLED_3            = 131,
         k_ProfiLED_Clock        = 132,
         k_winch_clutch          = 133,
+        k_baydoors              = 134,
+        k_drop_actuator         = 135,
         k_nr_aux_servo_functions         ///< This must be the last enum value (only add new values _before_ this one)
     } Aux_servo_function_t;
 
