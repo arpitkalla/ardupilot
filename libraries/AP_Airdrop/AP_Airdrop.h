@@ -1,6 +1,7 @@
 #pragma once
 
 // #include <AP_Param/AP_Param.h>
+#include <AP_AHRS/AP_AHRS.h>
 #include "AP_Common/Location.h"
 
 class AP_Airdrop {

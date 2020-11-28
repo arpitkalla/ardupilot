@@ -6,6 +6,8 @@
 
 #include <GCS_MAVLink/GCS.h>
 
+#define AIRDROP_LOCATION_RADIUS 10 // Drop Location Radius
+
 extern const AP_HAL::HAL& hal;
 
 // const AP_Param::GroupInfo AP_Airdrop::var_info[] = {
@@ -65,7 +67,36 @@ void AP_Airdrop::drop() {
 }
 
 void AP_Airdrop::set_drop_location(Location &loc) {
-    drop_location = loc; 
+    drop_location.lat = loc.lat;
+    drop_location.lng = loc.lng;
+    gcs().send_text(MAV_SEVERITY_INFO, "Airdrop: Location set to %d, %d", drop_location.lat, drop_location.lng);
+}
+
+void AP_Airdrop::update() {
+    if(!_armed) {
+        return;
+    }
+
+    if(_dropped) {
+        return;
+    }
+
+    if(!drop_location.initialised()) {
+        return;
+    }
+    
+    Location current_loc;
+    if (!AP::ahrs().get_position(current_loc)) {
+        return;
+    }
+
+    // Find the distance between current location and drop location in meters
+    float dist = drop_location.get_distance(current_loc);
+    
+    if (dist <= AIRDROP_LOCATION_RADIUS) {
+        gcs().send_text(MAV_SEVERITY_INFO, "Airdrop: Dropping at %d, %d at %f meters away", current_loc.lat, current_loc.lng, dist);
+        drop();
+    }
 }
 
 namespace AP {
