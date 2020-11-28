@@ -7,7 +7,7 @@ We create new MAVLink messages to set location, arm, disarm and drop the payload
 There are two ways to call the drop: a) One is manually by sending the drop message and b) automatically as the plane calculates the location of when to drop automatically.
 
 ## Todo
-[x] Create MAVLink Messages
+- [x] Create MAVLink Messages
 
     Added the following Mavlink Messages:
     ```
@@ -21,7 +21,8 @@ There are two ways to call the drop: a) One is manually by sending the drop mess
     long 226 0 0 0 0 10 11 0 
     ```
 
-[x] Create the servo functionality
+- [x] Create the servo functionality
+
     Can set the `SERVOn_FUNCTION` to `Baydoors` (134) and `Drop Actuator` (135).
     Baydoors MAX trim is to open and and the MIN is to close.
     Drop Actuators MAX is to keep the payload locked, MIN will retract the actuator for a drop.
@@ -31,7 +32,7 @@ There are two ways to call the drop: a) One is manually by sending the drop mess
     param set SERVO11_FUNCTION 135
     ```
 
-[x] Create basic dropping functionality
+- [x] Create basic dropping functionality
 
     Added a constant radius, if the plane is within the circle, drops the payload automatically. Runs on a 50Hz update loop for Planes.
     For very bare-bones testing put the folloing in the MAVporxy console when running with SITL:
@@ -42,6 +43,8 @@ There are two ways to call the drop: a) One is manually by sending the drop mess
     The first line arms the airdrop system, and the second sets the drop location to the planes default location, so it should instant drop and display a message.
 
 
-[ ] Add logic for dropping it smartly
-[ ] Create a parameters for Airdrop
-[ ] Write tests for different scenarios
+- [ ] Add logic for dropping it smartly
+
+- [ ] Create a parameters for Airdrop
+
+- [ ] Write tests for different scenarios
