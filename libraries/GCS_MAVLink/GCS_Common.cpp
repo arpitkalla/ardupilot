@@ -45,6 +45,7 @@
 #include <AP_Scripting/AP_Scripting.h>
 #include <AP_Winch/AP_Winch.h>
 #include <AP_OSD/AP_OSD.h>
+#include <AP_Airdrop/AP_Airdrop.h>
 
 #include <stdio.h>
 
@@ -3877,7 +3878,14 @@ MAV_RESULT GCS_MAVLINK::handle_command_long_packet(const mavlink_command_long_t 
     case MAV_CMD_DO_SET_ROI:
         result = handle_command_do_set_roi(packet);
         break;
+    case MAV_CMD_DO_AIRDROP:
+        result = handle_command_do_airdrop(packet);
+        break;
 
+    case MAV_CMD_DO_SET_AIRDROP_LOCATION:
+        result = handle_command_do_set_airdrop_location(packet);
+        break;
+   
     case MAV_CMD_PREFLIGHT_CALIBRATION:
         result = handle_command_preflight_calibration(packet);
         break;
@@ -4162,6 +4170,61 @@ MAV_RESULT GCS_MAVLINK::handle_command_do_set_roi(const mavlink_command_long_t &
     };
     return handle_command_do_set_roi(roi_loc);
 }
+
+MAV_RESULT GCS_MAVLINK::handle_command_do_airdrop(const mavlink_command_long_t &packet)
+{
+    AP_Airdrop *airdrop = AP::airdrop();
+    if (airdrop == nullptr) {
+        return MAV_RESULT_FAILED;
+    }
+
+    // param1 : gripper number (ignored)
+    // param2 : action (0=disarm, 1=arm, 2=drop). See AIRDROP_ACTIONS enum in Mavlink.
+    MAV_RESULT result = MAV_RESULT_ACCEPTED;
+
+    switch ((uint8_t)packet.param2) {
+    case AIRDROP_ACTION_DISARM:
+        airdrop->disarm();
+        break;
+    case AIRDROP_ACTION_ARM:
+        airdrop->arm();
+        break;
+    case AIRDROP_ACTION_DROP:
+        airdrop->drop();
+        break;
+    default:
+        result = MAV_RESULT_FAILED;
+        break;
+    }
+
+    return result;
+}
+
+
+MAV_RESULT GCS_MAVLINK::handle_command_do_set_airdrop_location(const mavlink_command_long_t &packet)
+{
+    Location drop_loc {
+        (int32_t)(packet.param5 * 1.0e7f),
+        (int32_t)(packet.param6 * 1.0e7f),
+        0, // Altitiude is ignored
+        Location::AltFrame::ABOVE_HOME
+    };
+
+    AP_Airdrop *airdrop = AP::airdrop();
+    if (airdrop == nullptr) {
+        return MAV_RESULT_UNSUPPORTED;
+    }
+
+    // sanity check location
+    if (!drop_loc.check_latlng()) {
+        return MAV_RESULT_FAILED;
+    }
+
+    airdrop->set_drop_location(drop_loc);
+
+    return MAV_RESULT_ACCEPTED;
+}
+
 
 MAV_RESULT GCS_MAVLINK::handle_command_int_packet(const mavlink_command_int_t &packet)
 {
