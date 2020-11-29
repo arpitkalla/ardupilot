@@ -42,6 +42,10 @@ There are two ways to call the drop: a) One is manually by sending the drop mess
     ```
     The first line arms the airdrop system, and the second sets the drop location to the planes default location, so it should instant drop and display a message.
 
+- [x] Add status message
+
+    Need to send a continuous message to the GCS to share the state and the set location of the Airdrop system.
+    Added the message `AIRDROP_STATUS` which contains the information about arming, has dropped and the set location and the location it was actually dropped.
 
 - [ ] Add logic for dropping it smartly
 
