@@ -19,7 +19,7 @@ class AP_Airdrop {
         void disarm();
         void drop();
         void set_drop_location(Location &loc);
-
+        void send_status(const GCS_MAVLINK &channel);
         // static const struct AP_Param::GroupInfo        var_info[];
 
     private:
@@ -27,6 +27,7 @@ class AP_Airdrop {
         bool _armed;
         bool _dropped;
         Location drop_location;
+        Location actual_drop_location;
 };
 
 namespace AP {

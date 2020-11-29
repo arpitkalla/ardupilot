@@ -60,9 +60,18 @@ void AP_Airdrop::drop() {
         return;
     }
 
+    Location current_loc;
+    if (!AP::ahrs().get_position(current_loc)) {
+        return;
+    }
 
     SRV_Channels::set_output_limit(SRV_Channel::k_drop_actuator, SRV_Channel::Limit::MIN);
     _dropped = true;
+
+    actual_drop_location.lat = current_loc.lat;
+    actual_drop_location.lng = current_loc.lng;
+
+    gcs().send_text(MAV_SEVERITY_INFO, "Airdrop: Dropping at %d, %d", current_loc.lat, current_loc.lng);
     gcs().send_text(MAV_SEVERITY_INFO, "Airdrop: Dropped");
 }
 
@@ -94,9 +103,22 @@ void AP_Airdrop::update() {
     float dist = drop_location.get_distance(current_loc);
     
     if (dist <= AIRDROP_LOCATION_RADIUS) {
-        gcs().send_text(MAV_SEVERITY_INFO, "Airdrop: Dropping at %d, %d at %f meters away", current_loc.lat, current_loc.lng, dist);
         drop();
     }
+}
+
+void AP_Airdrop::send_status(const GCS_MAVLINK &channel)
+{
+    mavlink_msg_airdrop_status_send(
+        channel.get_chan(),
+        AP_HAL::micros64(),
+        _armed,
+        _dropped,
+        drop_location.lat,
+        drop_location.lng,
+        actual_drop_location.lat,
+        actual_drop_location.lng
+    );
 }
 
 namespace AP {
