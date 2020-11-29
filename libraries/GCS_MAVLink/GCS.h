@@ -266,6 +266,7 @@ public:
     void send_rpm() const;
     void send_generator_status() const;
     virtual void send_winch_status() const {};
+    void send_airdrop_status() const;
 
     // lock a channel, preventing use by MAVLink
     void lock(bool _lock) {
@@ -483,6 +484,8 @@ protected:
     MAV_RESULT handle_command_get_home_position(const mavlink_command_long_t &packet);
     MAV_RESULT handle_command_do_fence_enable(const mavlink_command_long_t &packet);
     MAV_RESULT handle_command_debug_trap(const mavlink_command_long_t &packet);
+    MAV_RESULT handle_command_do_airdrop(const mavlink_command_long_t &packet);
+    MAV_RESULT handle_command_do_set_airdrop_location(const mavlink_command_long_t &packet);
 
     void handle_optical_flow(const mavlink_message_t &msg);
 

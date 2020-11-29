@@ -85,6 +85,7 @@
 #include <AP_Gripper/AP_Gripper.h>
 #include <AP_Landing/AP_Landing.h>
 #include <AP_LandingGear/AP_LandingGear.h>     // Landing Gear library
+#include <AP_Airdrop/AP_Airdrop.h>
 
 #include "GCS_Mavlink.h"
 #include "GCS_Plane.h"
@@ -627,6 +628,8 @@ private:
 #if PARACHUTE == ENABLED
     AP_Parachute parachute{relay};
 #endif
+    
+    AP_Airdrop airdrop;
 
     // terrain handling
 #if AP_TERRAIN_AVAILABLE

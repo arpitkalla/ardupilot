@@ -115,6 +115,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
 #if EFI_ENABLED
     SCHED_TASK(efi_update,             10,    200),
 #endif
+    SCHED_TASK_CLASS(AP_Airdrop, &plane.airdrop, update, 50, 100),
 };
 
 void Plane::get_scheduler_tasks(const AP_Scheduler::Task *&tasks,

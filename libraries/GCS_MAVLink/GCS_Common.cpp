@@ -45,6 +45,7 @@
 #include <AP_Scripting/AP_Scripting.h>
 #include <AP_Winch/AP_Winch.h>
 #include <AP_OSD/AP_OSD.h>
+#include <AP_Airdrop/AP_Airdrop.h>
 
 #include <stdio.h>
 
@@ -811,6 +812,7 @@ ap_message GCS_MAVLINK::mavlink_id_to_ap_message_id(const uint32_t mavlink_id) c
         { MAVLINK_MSG_ID_EFI_STATUS,            MSG_EFI_STATUS},
         { MAVLINK_MSG_ID_GENERATOR_STATUS,      MSG_GENERATOR_STATUS},
         { MAVLINK_MSG_ID_WINCH_STATUS,          MSG_WINCH_STATUS},
+        { MAVLINK_MSG_ID_AIRDROP_STATUS,        MSG_AIRDROP_STATUS},
             };
 
     for (uint8_t i=0; i<ARRAY_SIZE(map); i++) {
@@ -2404,6 +2406,15 @@ void GCS_MAVLINK::send_heartbeat() const
         system_status());
 }
 
+void GCS_MAVLINK::send_airdrop_status() const
+{
+    AP_Airdrop *airdrop = AP::airdrop();
+    if (airdrop == nullptr) {
+        return;
+    }
+    airdrop->send_status(*this);
+}
+
 MAV_RESULT GCS_MAVLINK::handle_command_set_message_interval(const mavlink_command_long_t &packet)
 {
     return set_message_interval((uint32_t)packet.param1, (int32_t)packet.param2);
@@ -3877,7 +3888,14 @@ MAV_RESULT GCS_MAVLINK::handle_command_long_packet(const mavlink_command_long_t 
     case MAV_CMD_DO_SET_ROI:
         result = handle_command_do_set_roi(packet);
         break;
+    case MAV_CMD_DO_AIRDROP:
+        result = handle_command_do_airdrop(packet);
+        break;
 
+    case MAV_CMD_DO_SET_AIRDROP_LOCATION:
+        result = handle_command_do_set_airdrop_location(packet);
+        break;
+   
     case MAV_CMD_PREFLIGHT_CALIBRATION:
         result = handle_command_preflight_calibration(packet);
         break;
@@ -4162,6 +4180,61 @@ MAV_RESULT GCS_MAVLINK::handle_command_do_set_roi(const mavlink_command_long_t &
     };
     return handle_command_do_set_roi(roi_loc);
 }
+
+MAV_RESULT GCS_MAVLINK::handle_command_do_airdrop(const mavlink_command_long_t &packet)
+{
+    AP_Airdrop *airdrop = AP::airdrop();
+    if (airdrop == nullptr) {
+        return MAV_RESULT_FAILED;
+    }
+
+    // param1 : gripper number (ignored)
+    // param2 : action (0=disarm, 1=arm, 2=drop). See AIRDROP_ACTIONS enum in Mavlink.
+    MAV_RESULT result = MAV_RESULT_ACCEPTED;
+
+    switch ((uint8_t)packet.param2) {
+    case AIRDROP_ACTION_DISARM:
+        airdrop->disarm();
+        break;
+    case AIRDROP_ACTION_ARM:
+        airdrop->arm();
+        break;
+    case AIRDROP_ACTION_DROP:
+        airdrop->drop();
+        break;
+    default:
+        result = MAV_RESULT_FAILED;
+        break;
+    }
+
+    return result;
+}
+
+
+MAV_RESULT GCS_MAVLINK::handle_command_do_set_airdrop_location(const mavlink_command_long_t &packet)
+{
+    Location drop_loc {
+        (int32_t)(packet.param5 * 1.0e7f),
+        (int32_t)(packet.param6 * 1.0e7f),
+        0, // Altitiude is ignored
+        Location::AltFrame::ABOVE_HOME
+    };
+
+    AP_Airdrop *airdrop = AP::airdrop();
+    if (airdrop == nullptr) {
+        return MAV_RESULT_UNSUPPORTED;
+    }
+
+    // sanity check location
+    if (!drop_loc.check_latlng()) {
+        return MAV_RESULT_FAILED;
+    }
+
+    airdrop->set_drop_location(drop_loc);
+
+    return MAV_RESULT_ACCEPTED;
+}
+
 
 MAV_RESULT GCS_MAVLINK::handle_command_int_packet(const mavlink_command_int_t &packet)
 {
@@ -4791,6 +4864,11 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
     case MSG_WINCH_STATUS:
         CHECK_PAYLOAD_SIZE(WINCH_STATUS);
         send_winch_status();
+        break;
+
+    case MSG_AIRDROP_STATUS:
+        CHECK_PAYLOAD_SIZE(AIRDROP_STATUS);
+        send_airdrop_status();
         break;
 
     default:
