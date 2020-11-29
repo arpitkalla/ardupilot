@@ -812,6 +812,7 @@ ap_message GCS_MAVLINK::mavlink_id_to_ap_message_id(const uint32_t mavlink_id) c
         { MAVLINK_MSG_ID_EFI_STATUS,            MSG_EFI_STATUS},
         { MAVLINK_MSG_ID_GENERATOR_STATUS,      MSG_GENERATOR_STATUS},
         { MAVLINK_MSG_ID_WINCH_STATUS,          MSG_WINCH_STATUS},
+        { MAVLINK_MSG_ID_AIRDROP_STATUS,        MSG_AIRDROP_STATUS},
             };
 
     for (uint8_t i=0; i<ARRAY_SIZE(map); i++) {
@@ -2403,6 +2404,15 @@ void GCS_MAVLINK::send_heartbeat() const
         base_mode(),
         gcs().custom_mode(),
         system_status());
+}
+
+void GCS_MAVLINK::send_airdrop_status() const
+{
+    AP_Airdrop *airdrop = AP::airdrop();
+    if (airdrop == nullptr) {
+        return;
+    }
+    airdrop->send_status(*this);
 }
 
 MAV_RESULT GCS_MAVLINK::handle_command_set_message_interval(const mavlink_command_long_t &packet)
@@ -4854,6 +4864,11 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
     case MSG_WINCH_STATUS:
         CHECK_PAYLOAD_SIZE(WINCH_STATUS);
         send_winch_status();
+        break;
+
+    case MSG_AIRDROP_STATUS:
+        CHECK_PAYLOAD_SIZE(AIRDROP_STATUS);
+        send_airdrop_status();
         break;
 
     default:
